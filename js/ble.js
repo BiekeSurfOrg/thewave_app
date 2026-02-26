@@ -13,38 +13,78 @@ const BLE = {
     }
 
     const meta = Config.meta;
+    const prefix = meta.bleNamePrefix || 'Wave-';
 
+    // 1. TRY AUTOMATIC SCANNING (BEST RSSI)
+    // This requires 'requestLEScan' support (Chrome Experimental / Bluefy)
+    if ('requestLEScan' in navigator.bluetooth) {
+      console.log('Starting proximity scan...');
+      try {
+        const scanner = await navigator.bluetooth.requestLEScan({
+          filters: [{ namePrefix: prefix }],
+          keepRepeatedDevices: true
+        });
+
+        return new Promise((resolve) => {
+          let bestDevice = null;
+          let highestRssi = -100;
+
+          const onAdvertisement = (event) => {
+            console.log(`Found: ${event.device.name} (RSSI: ${event.rssi})`);
+            if (event.rssi > highestRssi) {
+              highestRssi = event.rssi;
+              bestDevice = event.device;
+            }
+          };
+
+          navigator.bluetooth.addEventListener('advertisementreceived', onAdvertisement);
+
+          // Scan for 3 seconds to find the strongest signal
+          setTimeout(() => {
+            scanner.stop();
+            navigator.bluetooth.removeEventListener('advertisementreceived', onAdvertisement);
+
+            if (bestDevice) {
+              const location = Config.getLocationByDeviceName(bestDevice.name);
+              if (location) {
+                resolve({
+                  success: true,
+                  locationId: location.id,
+                  deviceName: bestDevice.name,
+                  rssi: highestRssi
+                });
+                return;
+              }
+            }
+            // If scanning found nothing, fall back to manual picker
+            this._runManualPicker(prefix).then(resolve);
+          }, 3000);
+        });
+      } catch (error) {
+        console.warn('Scanning API failed, falling back to picker:', error);
+      }
+    }
+
+    // 2. FALLBACK TO MANUAL PICKER
+    return this._runManualPicker(prefix);
+  },
+
+  async _runManualPicker(prefix) {
     try {
       const device = await navigator.bluetooth.requestDevice({
-        filters: [
-          { namePrefix: meta.bleNamePrefix || 'Wave-' }
-        ],
+        filters: [{ namePrefix: prefix }],
         optionalServices: []
       });
 
-      // Match the selected device to a configured location
       const location = Config.getLocationByDeviceName(device.name);
-
       if (location) {
-        return {
-          success: true,
-          locationId: location.id,
-          deviceName: device.name
-        };
+        return { success: true, locationId: location.id, deviceName: device.name };
       }
-
       return { success: false, reason: 'no-match', deviceName: device.name };
-
     } catch (error) {
-      if (error.name === 'NotFoundError') {
-        // User cancelled the device picker
-        return { success: false, reason: 'cancelled' };
-      }
-      if (error.name === 'SecurityError') {
-        // Not served over HTTPS
-        return { success: false, reason: 'insecure-context' };
-      }
-      return { success: false, reason: 'error', error };
+      if (error.name === 'NotFoundError') return { success: false, reason: 'cancelled' };
+      if (error.name === 'SecurityError') return { success: false, reason: 'insecure-context' };
+      return { success: false, reason: 'error', error: error.message };
     }
   }
 };
