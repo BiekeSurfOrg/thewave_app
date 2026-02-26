@@ -1,20 +1,13 @@
 /* ==========================================================
-   config.js — Loads wave-config.json and exposes the data
+   config.js — Exposes config data from WAVE_CONFIG global
    ========================================================== */
 
 const Config = {
   _data: null,
 
-  async load() {
-    try {
-      const response = await fetch('wave-config.json');
-      if (!response.ok) throw new Error('Failed to load config');
-      this._data = await response.json();
-      return this._data;
-    } catch (err) {
-      console.error('Config load error:', err);
-      return null;
-    }
+  load() {
+    this._data = typeof WAVE_CONFIG !== 'undefined' ? WAVE_CONFIG : null;
+    return this._data;
   },
 
   get meta() {
