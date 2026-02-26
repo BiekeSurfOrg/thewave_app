@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 200" width="120" height="200">
+  <defs>
+    <clipPath id="sole-cool">
+      <path d="M60 8 C85 8 100 25 102 50 C104 75 98 100 100 125 C102 150 95 170 85 185 C75 195 45 195 35 185 C25 170 18 150 20 125 C22 100 16 75 18 50 C20 25 35 8 60 8Z"/>
+    </clipPath>
+    <linearGradient id="cool-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A8D8EA"/>
+      <stop offset="30%" stop-color="#8BB8D6"/>
+      <stop offset="60%" stop-color="#5B86B8"/>
+      <stop offset="100%" stop-color="#3A5F8A"/>
+    </linearGradient>
+    <radialGradient id="cool-glow" cx="0.6" cy="0.3" r="0.7">
+      <stop offset="0%" stop-color="#D4A0C0" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#A8D8EA" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#3A5F8A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Sole base -->
+  <g clip-path="url(#sole-cool)">
+    <rect width="120" height="200" fill="url(#cool-grad)"/>
+    <rect width="120" height="200" fill="url(#cool-glow)"/>
+
+    <!-- Cloud/wave texture blobs -->
+    <circle cx="70" cy="35" r="28" fill="#D4A0C0" opacity="0.4"/>
+    <circle cx="40" cy="55" r="22" fill="#B0C4DE" opacity="0.4"/>
+    <circle cx="80" cy="70" r="20" fill="#8BB8D6" opacity="0.3"/>
+    <circle cx="30" cy="80" r="18" fill="#C8A2C8" opacity="0.3"/>
+    <circle cx="60" cy="45" r="15" fill="#E8D5E0" opacity="0.3"/>
+
+    <!-- White topographic wave lines at base -->
+    <g stroke="white" stroke-width="1.2" fill="none" opacity="0.6">
+      <path d="M10 155 Q35 148 60 155 Q85 162 110 155"/>
+      <path d="M10 162 Q35 155 60 162 Q85 169 110 162"/>
+      <path d="M10 169 Q35 162 60 169 Q85 176 110 169"/>
+      <path d="M15 176 Q40 169 60 176 Q80 183 105 176"/>
+      <path d="M20 183 Q45 176 60 183 Q75 190 100 183"/>
+    </g>
+
+    <!-- Ocean foam at very bottom -->
+    <g fill="white" opacity="0.35">
+      <ellipse cx="45" cy="190" rx="22" ry="5"/>
+      <ellipse cx="78" cy="191" rx="18" ry="5"/>
+    </g>
+  </g>
+
+  <!-- Sole outline -->
+  <path d="M60 8 C85 8 100 25 102 50 C104 75 98 100 100 125 C102 150 95 170 85 185 C75 195 45 195 35 185 C25 170 18 150 20 125 C22 100 16 75 18 50 C20 25 35 8 60 8Z"
+        fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+
+  <!-- Blue Y-strap -->
+  <g fill="none" stroke="#2B5797" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Center vertical strap -->
+    <path d="M60 28 L60 72"/>
+    <!-- Left diagonal strap -->
+    <path d="M60 72 L30 105"/>
+    <!-- Right diagonal strap -->
+    <path d="M60 72 L90 105"/>
+  </g>
+  <!-- Strap inner highlight -->
+  <g fill="none" stroke="#3A7BD5" stroke-width="2" stroke-linecap="round" opacity="0.5">
+    <path d="M60 30 L60 70"/>
+    <path d="M60 70 L32 103"/>
+    <path d="M60 70 L88 103"/>
+  </g>
+  <!-- Toe knot -->
+  <circle cx="60" cy="27" r="5" fill="#2B5797"/>
+  <circle cx="60" cy="27" r="3" fill="#3A7BD5" opacity="0.5"/>
+</svg>

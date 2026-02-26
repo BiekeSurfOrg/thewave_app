@@ -1,0 +1,660 @@
+/* ==========================================================
+   The Wave - Innovation Journey
+   styles.css — Layout, typography, theming, responsive
+   ========================================================== */
+
+:root {
+  /* Base palette */
+  --bg-dark: #0A0E1A;
+  --bg-surface: #131829;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.4);
+
+  /* Innovation step colors */
+  --color-inspire: #F0506E;
+  --color-explore: #008F7E;
+  --color-ideate: #00A1DE;
+  --color-experiment: #92D050;
+  --color-incubate: #F39200;
+
+  /* Accent / UI */
+  --color-accent: #00A1DE;
+  --color-accent-glow: rgba(0, 161, 222, 0.3);
+  --color-success: #92D050;
+  --color-surface-glass: rgba(255, 255, 255, 0.06);
+  --color-surface-glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Typography */
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+}
+
+/* ==========================================================
+   Reset & Base
+   ========================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* ==========================================================
+   Screens
+   ========================================================== */
+
+.screen {
+  display: none;
+  flex-direction: column;
+  position: relative;
+  min-height: 100dvh;
+  padding: env(safe-area-inset-top, 20px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 16px);
+  overflow: hidden;
+}
+
+.screen--active {
+  display: flex;
+}
+
+/* Topographic background pattern */
+.topo-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image:
+    repeating-radial-gradient(circle at 30% 40%, transparent 0, transparent 40px, rgba(255,255,255,0.3) 40px, rgba(255,255,255,0.3) 41px, transparent 41px, transparent 80px),
+    repeating-radial-gradient(circle at 70% 60%, transparent 0, transparent 50px, rgba(255,255,255,0.3) 50px, rgba(255,255,255,0.3) 51px, transparent 51px, transparent 100px),
+    repeating-radial-gradient(circle at 50% 20%, transparent 0, transparent 30px, rgba(255,255,255,0.3) 30px, rgba(255,255,255,0.3) 31px, transparent 31px, transparent 60px);
+}
+
+/* ==========================================================
+   Wave Logo
+   ========================================================== */
+
+.wave-logo {
+  font-family: var(--font-main);
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  text-transform: lowercase;
+  text-align: center;
+}
+
+.wave-logo span {
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  display: inline-block;
+  background: linear-gradient(135deg, #D4A0C0 0%, #00A1DE 50%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.wave-logo--large span {
+  font-size: 40px;
+  letter-spacing: 8px;
+}
+
+/* ==========================================================
+   Screen 1: Scanning
+   ========================================================== */
+
+.screen-scanning {
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 30px);
+  background: linear-gradient(180deg, #0A0E1A 0%, #0E1428 50%, #121830 100%);
+}
+
+.scanning-path-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.wave-path-svg {
+  width: 80%;
+  max-width: 300px;
+  height: 70vh;
+  position: absolute;
+  top: 5vh;
+}
+
+.footprints-container {
+  position: absolute;
+  inset: 0;
+}
+
+.footprint {
+  position: absolute;
+  width: 36px;
+  height: 60px;
+  left: var(--x);
+  top: var(--y);
+  transform: rotate(var(--rotate));
+  opacity: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+
+.footprint--warm {
+  background-image: url('../assets/flipflop-warm.svg');
+}
+
+.footprint--cool {
+  background-image: url('../assets/flipflop-cool.svg');
+  transform: rotate(var(--rotate)) scaleX(-1);
+}
+
+/* Scanning content overlay */
+.scanning-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.scanning-message {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  margin-top: var(--space-sm);
+}
+
+/* Scanning pulse */
+.scan-pulse {
+  position: absolute;
+  bottom: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.scan-pulse-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 20px var(--color-accent-glow);
+}
+
+/* ==========================================================
+   Screen 2: Manual Selector
+   ========================================================== */
+
+.screen-manual {
+  padding-top: calc(env(safe-area-inset-top, 20px) + 10px);
+  background: linear-gradient(180deg, #0A0E1A 0%, #0E1428 100%);
+}
+
+.manual-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.manual-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.manual-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.location-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--space-xl);
+}
+
+.location-select-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-surface-glass-border);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.location-select-card:active {
+  transform: scale(0.97);
+}
+
+.location-select-card .card-step {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.location-select-card .card-info {
+  flex: 1;
+}
+
+.location-select-card .card-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.location-select-card .card-tagline {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.location-select-card .card-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Visited indicator on manual cards */
+.location-select-card .card-visited {
+  display: none;
+  color: var(--color-success);
+  font-size: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.location-select-card.is-visited .card-visited {
+  display: block;
+}
+
+/* ==========================================================
+   Screen 3: Location Content
+   ========================================================== */
+
+.screen-location {
+  padding-top: calc(env(safe-area-inset-top, 20px) + 10px);
+  justify-content: space-between;
+  background: linear-gradient(180deg, #0A0E1A 0%, #0E1428 100%);
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
+.progress-dots {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dot--visited {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent-glow);
+}
+
+.dot--current {
+  transform: scale(1.35);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+}
+
+.progress-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Location content card */
+.location-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0 var(--space-xs);
+  overflow-y: auto;
+}
+
+.card-glass {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-surface-glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.location-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-sm);
+}
+
+.location-step-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  color: white;
+}
+
+.location-name {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--space-xs);
+}
+
+.location-tagline {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.location-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  margin: var(--space-lg) 0;
+}
+
+.location-description {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.location-details {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.location-details li {
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding-left: var(--space-lg);
+  position: relative;
+  line-height: 1.5;
+}
+
+.location-details li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--current-location-color, var(--color-accent));
+  opacity: 0.7;
+}
+
+/* Navigation */
+.location-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) 0;
+  gap: var(--space-md);
+}
+
+/* ==========================================================
+   Screen 4: Completion
+   ========================================================== */
+
+.screen-completion {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-lg);
+  background: linear-gradient(180deg, #0A0E1A 0%, #0E1428 100%);
+}
+
+.completion-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  max-width: 360px;
+}
+
+.completion-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-sm);
+}
+
+.completion-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.completion-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.completion-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  margin: var(--space-md) 0;
+}
+
+.completion-step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-glass);
+}
+
+.completion-step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.completion-step-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.completion-step-check {
+  margin-left: auto;
+  color: var(--color-success);
+  font-size: 16px;
+}
+
+/* ==========================================================
+   Buttons
+   ========================================================== */
+
+.btn {
+  font-family: var(--font-main);
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
+  padding: 14px 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 17px;
+  box-shadow: 0 4px 20px var(--color-accent-glow);
+}
+
+.btn-primary:active {
+  box-shadow: 0 2px 10px var(--color-accent-glow);
+}
+
+.btn-secondary {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-surface-glass-border);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 14px;
+}
+
+.btn-link {
+  background: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: var(--space-sm);
+}
+
+.btn-back {
+  background: none;
+  color: var(--text-secondary);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.btn-nav {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-surface-glass-border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+.btn-restart {
+  margin-top: var(--space-md);
+}
+
+/* ==========================================================
+   Responsive
+   ========================================================== */
+
+@media (min-width: 390px) {
+  :root {
+    --space-lg: 28px;
+    --space-xl: 48px;
+  }
+
+  .scanning-message {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .screen {
+    max-width: 430px;
+    margin: 0 auto;
+  }
+}
