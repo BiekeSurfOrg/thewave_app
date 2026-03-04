@@ -10,6 +10,7 @@ const WAVE_CONFIG = {
       "step": 1,
       "name": "Inspire",
       "bleDeviceName": "Wave-Inspire",
+      "uuid": "f2e77ecf-2113-4835-97ef-e693922f9092",
       "color": "#F0506E",
       "tagline": "Ignite curiosity",
       "description": "Inspiration sparks innovation and can come from anywhere. This is where the journey begins — open your mind to new possibilities, observe the world around you, and let curiosity guide your first steps.",

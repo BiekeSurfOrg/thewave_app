@@ -1,0 +1,55 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+jobs:
+  build_android:
+    name: Build APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          
+      - name: Prepare Web Directory
+        run: |
+          # Capacitor expects web assets in the configured webDir ('www' usually)
+          mkdir www
+          # Copy only the files needed for the static site (skip node_modules, .git, config files)
+          cp -r assets css js photos index.html wave-config.json wave-config.js www/
+          
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Initialize & Sync Capacitor Android
+        run: |
+          npx cap add android
+          npx cap copy android
+          
+      - name: Build Android APK
+        working-directory: ./android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TheWave-App-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7

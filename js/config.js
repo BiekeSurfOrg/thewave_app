@@ -28,5 +28,14 @@ const Config = {
 
   getLocationByDeviceName(deviceName) {
     return this.locations.find(loc => loc.bleDeviceName === deviceName) || null;
+  },
+
+  getLocationByUUID(uuid) {
+    if (!uuid) return null;
+    const cleanInput = uuid.toLowerCase().replace(/-/g, '');
+    return this.locations.find(loc => {
+      if (!loc.uuid) return false;
+      return loc.uuid.toLowerCase().replace(/-/g, '') === cleanInput;
+    }) || null;
   }
 };

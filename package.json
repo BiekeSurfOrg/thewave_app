@@ -1,0 +1,14 @@
+{
+  "name": "the-wave-app",
+  "version": "1.0.0",
+  "description": "The Wave - Innovation Journey",
+  "scripts": {
+    "build:android": "npx cap add android && npx cap copy android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor-community/bluetooth-le": "^6.0.0"
+  }
+}
