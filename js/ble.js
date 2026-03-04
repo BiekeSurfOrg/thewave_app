@@ -7,7 +7,7 @@ const BLE = {
     return ('bluetooth' in navigator) || (window.Capacitor && window.Capacitor.isNativePlatform());
   },
 
-  async scan() {
+  async scan(rawStreamCallback = null) {
     if (!this.isSupported()) {
       return { success: false, reason: 'unsupported' };
     }
@@ -17,7 +17,7 @@ const BLE = {
 
     // 1. CAPACITOR NATIVE BLUETOOTH LE
     if (window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.BleClient) {
-      return this._runCapacitorScan(prefix);
+      return this._runCapacitorScan(prefix, rawStreamCallback);
     }
 
     // 2. WEB BLUETOOTH (BEST RSSI)
@@ -34,6 +34,11 @@ const BLE = {
           let highestRssi = -100;
 
           const onAdvertisement = (event) => {
+            // Diagnostic streaming bypasses all filters
+            if (rawStreamCallback) {
+              rawStreamCallback(event.device, event.rssi);
+            }
+
             if (event.rssi <= -80) return; // Strict threshold
 
             let uuidObj = null;
@@ -63,6 +68,9 @@ const BLE = {
 
           navigator.bluetooth.addEventListener('advertisementreceived', onAdvertisement);
 
+          // Let diagnostic run longer (10s) vs standard routing (3s)
+          let timeoutAmount = rawStreamCallback ? 10000 : 3000;
+
           setTimeout(() => {
             scanner.stop();
             navigator.bluetooth.removeEventListener('advertisementreceived', onAdvertisement);
@@ -76,8 +84,13 @@ const BLE = {
               });
               return;
             }
-            this._runManualPicker(prefix).then(resolve);
-          }, 3000);
+
+            if (!rawStreamCallback) {
+              this._runManualPicker(prefix).then(resolve);
+            } else {
+              resolve({ success: false, reason: 'timeout' });
+            }
+          }, timeoutAmount);
         });
       } catch (error) {
         console.warn('Web Bluetooth scanning failed:', error);
@@ -85,10 +98,10 @@ const BLE = {
     }
 
     // 3. FALLBACK TO MANUAL PICKER
-    return this._runManualPicker(prefix);
+    return this._runManualPicker(prefix, rawStreamCallback);
   },
 
-  async _runCapacitorScan(prefix) {
+  async _runCapacitorScan(prefix, rawStreamCallback = null) {
     console.log('Starting Capacitor Bluetooth proximity scan...');
     const { BleClient } = window.Capacitor.Plugins;
 
@@ -100,6 +113,11 @@ const BLE = {
         let highestRssi = -100;
 
         BleClient.requestLEScan({}, (result) => {
+          // Diagnostic logger callback bypasses threshold filters
+          if (rawStreamCallback) {
+            rawStreamCallback(result.device, result.rssi);
+          }
+
           if (result.rssi <= -80) return; // Strict threshold
 
           // Check standard UUID arrays
@@ -137,7 +155,9 @@ const BLE = {
           }
         });
 
-        // Scan for 3 seconds
+        const timeoutAmount = rawStreamCallback ? 10000 : 3000;
+
+        // Scan duration
         setTimeout(async () => {
           await BleClient.stopLEScan();
 
@@ -151,7 +171,7 @@ const BLE = {
           } else {
             resolve({ success: false, reason: 'no-match' });
           }
-        }, 3000);
+        }, timeoutAmount);
 
       });
 
@@ -161,7 +181,7 @@ const BLE = {
     }
   },
 
-  async _runManualPicker(prefix) {
+  async _runManualPicker(prefix, rawStreamCallback = null) {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       // Native Apps don't have a built-in browser UI picker, fallback immediately to error or UI manual selection.
       return { success: false, reason: 'cancelled' };
@@ -170,8 +190,13 @@ const BLE = {
     try {
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ namePrefix: prefix }],
-        optionalServices: []
+        optionalServices: [] // Web BT requires explicit services here if querying later
       });
+
+      // Pass exact manual device ping into logs
+      if (rawStreamCallback) {
+        rawStreamCallback(device, -50); // Hardcoded 'fake' strong RSSI since manual picker lacks true RSSI
+      }
 
       const location = Config.getLocationByDeviceName(device.name);
       if (location) {
@@ -181,6 +206,11 @@ const BLE = {
     } catch (error) {
       if (error.name === 'NotFoundError') return { success: false, reason: 'cancelled' };
       if (error.name === 'SecurityError') return { success: false, reason: 'insecure-context' };
+
+      // Provide detailed error reason into diagnostic log if requested
+      if (rawStreamCallback) {
+        rawStreamCallback({ name: `Error: ${error.name}`, id: error.message }, 0);
+      }
       return { success: false, reason: 'error', error: error.message };
     }
   }

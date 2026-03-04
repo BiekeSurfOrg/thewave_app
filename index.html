@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0A0E1A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +15,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/animations.css">
 </head>
+
 <body>
   <main id="app">
 
@@ -26,12 +29,12 @@
         <svg class="wave-path-svg" viewBox="0 0 300 600" preserveAspectRatio="xMidYMid meet">
           <!-- Dashed background path -->
           <path class="wave-path-bg"
-                d="M150 570 C80 510, 230 460, 150 400 C70 340, 230 290, 150 230 C70 170, 230 120, 150 60"
-                fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round"/>
+            d="M150 570 C80 510, 230 460, 150 400 C70 340, 230 290, 150 230 C70 170, 230 120, 150 60" fill="none"
+            stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round" />
           <!-- Animated draw path -->
           <path class="wave-path-draw"
-                d="M150 570 C80 510, 230 460, 150 400 C70 340, 230 290, 150 230 C70 170, 230 120, 150 60"
-                fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/>
+            d="M150 570 C80 510, 230 460, 150 400 C70 340, 230 290, 150 230 C70 170, 230 120, 150 60" fill="none"
+            stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" />
         </svg>
 
         <!-- Flip flop footprints along the path -->
@@ -68,6 +71,34 @@
         </button>
         <button class="btn btn-link btn-manual" id="btn-manual">Or choose your location</button>
       </div>
+
+      <!-- Diagnostic Button -->
+      <button class="btn-icon btn-open-log" id="btn-open-log" aria-label="Open Diagnostics">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Diagnostic Overlay -->
+      <div class="log-overlay" id="log-overlay">
+        <div class="log-header">
+          <h2 class="log-title">BLE Diagnostics</h2>
+          <div class="log-actions">
+            <button class="btn btn-secondary btn-log-pause" id="btn-log-pause">Start</button>
+            <button class="btn btn-secondary btn-log-clear" id="btn-log-clear">Clear</button>
+            <button class="btn-icon btn-log-close" id="btn-log-close" aria-label="Close">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <ul class="log-list" id="log-list">
+          <!-- Populated by logger.js -->
+        </ul>
+      </div>
     </section>
 
     <!-- ========== SCREEN 2: MANUAL SELECTOR ========== -->
@@ -75,8 +106,9 @@
       <div class="topo-bg"></div>
       <div class="manual-header">
         <button class="btn btn-back" id="btn-back-scan" aria-label="Back to scanning">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
         <h2 class="manual-title">Select your location</h2>
@@ -114,16 +146,18 @@
       <!-- Navigation -->
       <div class="location-nav">
         <button class="btn btn-nav" id="btn-prev" aria-label="Previous step">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M15 18l-6-6 6-6"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
         <button class="btn btn-secondary btn-scan-again" id="btn-scan-again">
           <span class="btn-icon">&#9678;</span> Scan again
         </button>
         <button class="btn btn-nav" id="btn-next" aria-label="Next step">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M9 18l6-6-6-6"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
       </div>
@@ -136,7 +170,8 @@
         <div class="completion-icon">&#127754;</div>
         <div class="wave-logo wave-logo--large">the <span>WAVE</span></div>
         <h1 class="completion-title">Journey Complete!</h1>
-        <p class="completion-text">You've explored all 5 steps of innovation. The path of discovery never truly ends — take these ideas with you and keep innovating.</p>
+        <p class="completion-text">You've explored all 5 steps of innovation. The path of discovery never truly ends —
+          take these ideas with you and keep innovating.</p>
         <div class="completion-steps" id="completion-steps">
           <!-- Summary of all 5 steps populated by JS -->
         </div>
@@ -151,6 +186,8 @@
   <script src="js/ble.js"></script>
   <script src="js/scanning.js"></script>
   <script src="js/locations.js"></script>
+  <script src="js/logger.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>

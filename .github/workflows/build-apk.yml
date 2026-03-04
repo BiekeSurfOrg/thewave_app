@@ -39,15 +39,21 @@ jobs:
           npx cap add android
           npx cap copy android
           
+      - name: Generate App Icons
+        run: npx @capacitor/assets generate --iconBackgroundColor '#0A0E1A' --assetPath www/assets/app-icon.png --android
+
       - name: Build Android APK
         working-directory: ./android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
           
+      - name: Rename APK Output
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/TheWaveApp.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TheWave-App-Debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: TheWaveApp
+          path: android/app/build/outputs/apk/debug/TheWaveApp.apk
           retention-days: 7

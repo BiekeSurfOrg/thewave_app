@@ -1,7 +1,7 @@
 const WAVE_CONFIG = {
   "meta": {
     "appName": "The Wave",
-    "bleNamePrefix": "Wave-",
+    "bleNamePrefix": "",
     "scanTimeoutMs": 10000
   },
   "locations": [

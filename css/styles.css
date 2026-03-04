@@ -227,6 +227,125 @@ body {
   box-shadow: 0 0 20px var(--color-accent-glow);
 }
 
+/* Diagnostic Buttons & Overlay */
+.btn-open-log {
+  position: absolute;
+  top: env(safe-area-inset-top, 20px);
+  right: env(safe-area-inset-right, 16px);
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  z-index: 20;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.log-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 26, 0.95);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: env(safe-area-inset-top, 40px) env(safe-area-inset-right, 20px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 20px);
+}
+
+.log-overlay.is-open {
+  transform: translateY(0);
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-surface-glass-border);
+}
+
+.log-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.log-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.log-actions .btn-secondary {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-log-close {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.log-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  -webkit-overflow-scrolling: touch;
+}
+
+.log-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.log-item--strong {
+  background: rgba(0, 200, 83, 0.1);
+  color: #00C853;
+  border: 1px solid rgba(0, 200, 83, 0.3);
+}
+
+.log-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.log-item-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.log-item-rssi {
+  font-weight: 700;
+}
+
 /* ==========================================================
    Screen 2: Manual Selector
    ========================================================== */
