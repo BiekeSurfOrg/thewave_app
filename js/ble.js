@@ -42,7 +42,10 @@ const BLE = {
   },
 
   async scan(rawStreamCallback = null) {
+    if (rawStreamCallback) rawStreamCallback({ name: "Engine Initializing", id: "System" }, `Checking hardware support...`, true);
+
     if (!this.isSupported()) {
+      if (rawStreamCallback) rawStreamCallback({ name: "Error", id: "System" }, `Bluetooth is unsupported on this device.`, true);
       return { success: false, reason: 'unsupported' };
     }
 
@@ -51,17 +54,21 @@ const BLE = {
 
     // 1. CAPACITOR NATIVE BLUETOOTH LE
     if (window.Capacitor && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.BleClient) {
+      if (rawStreamCallback) rawStreamCallback({ name: "Mode Selected", id: "System" }, `Using Capacitor Native Bluetooth`, true);
       return this._runCapacitorScan(prefix, rawStreamCallback);
     }
 
     // 2. WEB BLUETOOTH (BEST RSSI)
     if ('requestLEScan' in navigator.bluetooth) {
+      if (rawStreamCallback) rawStreamCallback({ name: "Mode Selected", id: "System" }, `Using Web Bluetooth (requestLEScan)`, true);
       console.log('Starting Web Bluetooth proximity scan...');
       try {
         const scanner = await navigator.bluetooth.requestLEScan({
           acceptAllAdvertisements: true,
           keepRepeatedDevices: true
         });
+
+        if (rawStreamCallback) rawStreamCallback({ name: "Scanner Active", id: "System" }, `Listening for background beacons...`, true);
 
         return new Promise((resolve) => {
           let bestDevice = null;
@@ -96,7 +103,7 @@ const BLE = {
               if (inZone) {
                 rawStreamCallback({ name: "Zone Status", id: "System" }, `You have entered: ${displayName}`, true);
               } else {
-                rawStreamCallback({ name: "Zone Status", id: "System" }, `Searching (${Math.round(smoothedRssi)} dBm)...`, true);
+                rawStreamCallback({ name: "Zone Tracker", id: "System" }, `Smoothing ${displayName} (${Math.round(smoothedRssi)} dBm)...`, true);
               }
             }
 
@@ -142,6 +149,7 @@ const BLE = {
         });
       } catch (error) {
         console.warn('Web Bluetooth scanning failed:', error);
+        if (rawStreamCallback) rawStreamCallback({ name: "Fallback triggered", id: "System" }, `requestLEScan failed: ${error.message}`, true);
       }
     }
 
@@ -150,11 +158,13 @@ const BLE = {
   },
 
   async _runCapacitorScan(prefix, rawStreamCallback = null) {
+    if (rawStreamCallback) rawStreamCallback({ name: "Initializing Plugin", id: "System" }, `Starting Capacitor Native...`, true);
     console.log('Starting Capacitor Bluetooth proximity scan...');
     const { BleClient } = window.Capacitor.Plugins;
 
     try {
       await BleClient.initialize({ androidNeverForLocation: false });
+      if (rawStreamCallback) rawStreamCallback({ name: "Plugin Ready", id: "System" }, `Listening for raw hardware beacons...`, true);
 
       return new Promise((resolve) => {
         let bestDeviceMatched = null;
@@ -203,7 +213,7 @@ const BLE = {
             if (inZone) {
               rawStreamCallback({ name: "Zone Status", id: "System" }, `You have entered: ${displayName}`, true);
             } else {
-              rawStreamCallback({ name: "Zone Status", id: "System" }, `Searching (${Math.round(smoothedRssi)} dBm)...`, true);
+              rawStreamCallback({ name: "Zone Tracker", id: "System" }, `Smoothing ${displayName} (${Math.round(smoothedRssi)} dBm)...`, true);
             }
           }
 
@@ -223,6 +233,7 @@ const BLE = {
         // Scan duration
         setTimeout(async () => {
           await BleClient.stopLEScan();
+          if (rawStreamCallback) rawStreamCallback({ name: "Hardware Stopped", id: "System" }, `Native scan window closed.`, true);
 
           if (bestDeviceMatched) {
             resolve({
@@ -239,18 +250,22 @@ const BLE = {
       });
 
     } catch (error) {
+      if (rawStreamCallback) rawStreamCallback({ name: "Fatal Hardware Error", id: "System" }, error.message, true);
       console.error('Capacitor Plugin Bluetooth Error:', error);
       return { success: false, reason: 'error', error: error.message };
     }
   },
 
   async _runManualPicker(prefix, rawStreamCallback = null) {
+    if (rawStreamCallback) rawStreamCallback({ name: "Mode Selected", id: "System" }, `Falling back to Web Bluetooth Manual Picker`, true);
+
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       // Native Apps don't have a built-in browser UI picker, fallback immediately to error or UI manual selection.
       return { success: false, reason: 'cancelled' };
     }
 
     try {
+      if (rawStreamCallback) rawStreamCallback({ name: "Awaiting Input", id: "System" }, `Please select a device from the browser popup`, true);
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ namePrefix: prefix }],
         optionalServices: [] // Web BT requires explicit services here if querying later
@@ -258,6 +273,7 @@ const BLE = {
 
       // Pass exact manual device ping into logs
       if (rawStreamCallback) {
+        rawStreamCallback({ name: "Manual Selection", id: "System" }, `User picked: ${device.name}`, true);
         rawStreamCallback(device, -50); // Hardcoded 'fake' strong RSSI since manual picker lacks true RSSI
       }
 
@@ -267,12 +283,18 @@ const BLE = {
       }
       return { success: false, reason: 'no-match', deviceName: device.name };
     } catch (error) {
-      if (error.name === 'NotFoundError') return { success: false, reason: 'cancelled' };
-      if (error.name === 'SecurityError') return { success: false, reason: 'insecure-context' };
+      if (error.name === 'NotFoundError') {
+        if (rawStreamCallback) rawStreamCallback({ name: "Selection Cancelled", id: "System" }, `Prompt was dismissed`, true);
+        return { success: false, reason: 'cancelled' };
+      }
+      if (error.name === 'SecurityError') {
+        if (rawStreamCallback) rawStreamCallback({ name: "Security Error", id: "System" }, `Insecure context or lacking permissions`, true);
+        return { success: false, reason: 'insecure-context' };
+      }
 
       // Provide detailed error reason into diagnostic log if requested
       if (rawStreamCallback) {
-        rawStreamCallback({ name: `Error: ${error.name}`, id: error.message }, 0);
+        rawStreamCallback({ name: `Error: ${error.name}`, id: "System" }, error.message, true);
       }
       return { success: false, reason: 'error', error: error.message };
     }
