@@ -61,9 +61,15 @@ const Logger = {
         this.addLog('System', 'Starting diagnostic scan...', 0);
 
         // Call the updated BLE scan method, passing our logger as the callback
-        await BLE.scan((device, rssi) => {
+        await BLE.scan((device, rssi, isSystemMsg = false) => {
             if (!this.isScanning) return;
-            this.addLog(device.name || device.id || 'Unknown Device', device.id || 'N/A', rssi);
+
+            if (isSystemMsg) {
+                // device struct contains `{name: "Zone Status", id: "System"}` and rssi is our string message.
+                this.addLog(device.id, rssi, 0); // Display as [System] My message
+            } else {
+                this.addLog(device.name || device.id || 'Unknown Device', device.id || 'N/A', rssi);
+            }
         });
 
         // Scanning finished (timeout or error)

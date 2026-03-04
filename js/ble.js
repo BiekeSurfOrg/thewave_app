@@ -2,6 +2,40 @@
    ble.js — Hybrid Web Bluetooth / Capacitor Bluetooth LE
    ========================================================== */
 
+class ZoneTracker {
+  constructor(threshold = -80, bufferSize = 5) {
+    this.threshold = threshold;
+    this.bufferSize = bufferSize;
+    this.deviceHistory = new Map(); // Stores [rssi, rssi, ...] per UUID
+  }
+
+  // Adds a new reading and returns the smoothed average
+  processReading(uuid, rssi) {
+    if (!this.deviceHistory.has(uuid)) {
+      this.deviceHistory.set(uuid, []);
+    }
+
+    const history = this.deviceHistory.get(uuid);
+    history.push(rssi);
+
+    // Keep only the last N readings
+    if (history.length > this.bufferSize) {
+      history.shift();
+    }
+
+    // Calculate Simple Moving Average (SMA)
+    const average = history.reduce((a, b) => a + b) / history.length;
+    return average;
+  }
+
+  // Determine if we should trigger a "Zone Enter" or "Zone Exit"
+  // Hysteresis (2dBm) prevents flickering at the boundary
+  isUserInZone(currentAverage) {
+    const hysteresis = 2;
+    return currentAverage > (this.threshold + hysteresis);
+  }
+}
+
 const BLE = {
   isSupported() {
     return ('bluetooth' in navigator) || (window.Capacitor && window.Capacitor.isNativePlatform());
@@ -31,21 +65,15 @@ const BLE = {
 
         return new Promise((resolve) => {
           let bestDevice = null;
-          let highestRssi = -100;
+          let highestAvgRssi = -100;
+          const tracker = new ZoneTracker(-80, 5);
 
           const onAdvertisement = (event) => {
-            // Diagnostic streaming bypasses all filters
-            if (rawStreamCallback) {
-              rawStreamCallback(event.device, event.rssi);
-            }
-
-            if (event.rssi <= -80) return; // Strict threshold
-
+            // Parse UUID or Name to uniquely track the device
             let uuidObj = null;
             if (event.uuids && event.uuids.length > 0) uuidObj = event.uuids[0];
 
             if (!uuidObj && event.manufacturerData && event.manufacturerData.has(76)) {
-              // Parse Apple iBeacon Data
               const data = event.manufacturerData.get(76);
               if (data.byteLength >= 23 && data.getUint8(0) === 0x02 && data.getUint8(1) === 0x15) {
                 const uuidHex = [];
@@ -54,13 +82,33 @@ const BLE = {
               }
             }
 
+            const trackingId = uuidObj || event.device.name || event.device.id;
+            const smoothedRssi = tracker.processReading(trackingId, event.rssi);
+            const inZone = tracker.isUserInZone(smoothedRssi);
+
+            // Diagnostic streaming bypasses routing logic to show everything
+            if (rawStreamCallback) {
+              rawStreamCallback(event.device, event.rssi);
+
+              const location = uuidObj ? Config.getLocationByUUID(uuidObj) : Config.getLocationByDeviceName(event.device.name);
+              const displayName = location ? location.name : trackingId;
+
+              if (inZone) {
+                rawStreamCallback({ name: "Zone Status", id: "System" }, `You have entered: ${displayName}`, true);
+              } else {
+                rawStreamCallback({ name: "Zone Status", id: "System" }, `Searching (${Math.round(smoothedRssi)} dBm)...`, true);
+              }
+            }
+
+            if (!inZone) return; // Strict threshold smoothed by hysteresis
+
             let location = uuidObj ? Config.getLocationByUUID(uuidObj) : null;
             if (!location && event.device.name && event.device.name.startsWith(prefix)) {
               location = Config.getLocationByDeviceName(event.device.name);
             }
 
-            if (location && event.rssi > highestRssi) {
-              highestRssi = event.rssi;
+            if (location && smoothedRssi > highestAvgRssi) {
+              highestAvgRssi = smoothedRssi;
               bestDevice = event.device;
               bestDevice._locationMatch = location;
             }
@@ -80,7 +128,7 @@ const BLE = {
                 success: true,
                 locationId: bestDevice._locationMatch.id,
                 deviceName: bestDevice.name || 'Beacon',
-                rssi: highestRssi
+                rssi: highestAvgRssi
               });
               return;
             }
@@ -110,20 +158,17 @@ const BLE = {
 
       return new Promise((resolve) => {
         let bestDeviceMatched = null;
-        let highestRssi = -100;
+        let highestAvgRssi = -100;
+        const tracker = new ZoneTracker(-80, 5);
 
         BleClient.requestLEScan({}, (result) => {
-          // Diagnostic logger callback bypasses threshold filters
-          if (rawStreamCallback) {
-            rawStreamCallback(result.device, result.rssi);
-          }
-
-          if (result.rssi <= -80) return; // Strict threshold
-
           // Check standard UUID arrays
           let location = null;
+          let uuidObj = null;
+
           if (result.uuids && result.uuids.length > 0) {
-            location = Config.getLocationByUUID(result.uuids[0]);
+            uuidObj = result.uuids[0];
+            location = Config.getLocationByUUID(uuidObj);
           }
 
           // Check manufacturer data (Apple Company ID is typically 0x004C)
@@ -134,8 +179,8 @@ const BLE = {
               if (dataView.byteLength >= 23 && dataView.getUint8(0) === 0x02 && dataView.getUint8(1) === 0x15) {
                 const uuidHex = [];
                 for (let j = 2; j < 18; j++) uuidHex.push(dataView.getUint8(j).toString(16).padStart(2, '0'));
-                const uuidStr = `${uuidHex.slice(0, 4).join('')}-${uuidHex.slice(4, 6).join('')}-${uuidHex.slice(6, 8).join('')}-${uuidHex.slice(8, 10).join('')}-${uuidHex.slice(10, 16).join('')}`;
-                location = Config.getLocationByUUID(uuidStr);
+                uuidObj = `${uuidHex.slice(0, 4).join('')}-${uuidHex.slice(4, 6).join('')}-${uuidHex.slice(6, 8).join('')}-${uuidHex.slice(8, 10).join('')}-${uuidHex.slice(10, 16).join('')}`;
+                location = Config.getLocationByUUID(uuidObj);
                 if (location) break;
               }
             }
@@ -146,8 +191,26 @@ const BLE = {
             location = Config.getLocationByDeviceName(result.device.name);
           }
 
-          if (location && result.rssi > highestRssi) {
-            highestRssi = result.rssi;
+          const trackingId = uuidObj || result.device.name || result.device.deviceId;
+          const smoothedRssi = tracker.processReading(trackingId, result.rssi);
+          const inZone = tracker.isUserInZone(smoothedRssi);
+
+          // Diagnostic logger callback bypasses threshold routing filters
+          if (rawStreamCallback) {
+            rawStreamCallback(result.device, result.rssi);
+            const displayName = location ? location.name : trackingId;
+
+            if (inZone) {
+              rawStreamCallback({ name: "Zone Status", id: "System" }, `You have entered: ${displayName}`, true);
+            } else {
+              rawStreamCallback({ name: "Zone Status", id: "System" }, `Searching (${Math.round(smoothedRssi)} dBm)...`, true);
+            }
+          }
+
+          if (!inZone) return; // Strict threshold smoothed by hysteresis
+
+          if (location && smoothedRssi > highestAvgRssi) {
+            highestAvgRssi = smoothedRssi;
             bestDeviceMatched = {
               device: result.device,
               location: location
@@ -166,7 +229,7 @@ const BLE = {
               success: true,
               locationId: bestDeviceMatched.location.id,
               deviceName: bestDeviceMatched.device.name || 'Beacon',
-              rssi: highestRssi
+              rssi: highestAvgRssi
             });
           } else {
             resolve({ success: false, reason: 'no-match' });
